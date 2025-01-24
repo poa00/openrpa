@@ -29,6 +29,7 @@ namespace OpenRPA
         public string ocrlanguage { get { return GetProperty(null, "eng"); } set { SetProperty(null, value); } }
         // public string[] openworkflows { get { return GetProperty(null, new string[] { }); } set { SetProperty(null, value); } }
         public string[] files_pending_deletion { get { return GetProperty(null, new string[] { }); } set { SetProperty(null, value); } }
+        public bool restore_dependencies_on_startup { get { return GetProperty(null, false); } set { SetProperty(null, value); } }
         public System.Drawing.Rectangle mainwindow_position { get { return GetProperty(null, System.Drawing.Rectangle.Empty); } set { SetProperty(null, value); } }
         public string designerlayout { get { return GetProperty(null, ""); } set { SetProperty(null, value); } }
         public bool record_overlay { get { return GetProperty(null, true); } set { SetProperty(null, value); } }
@@ -85,6 +86,7 @@ namespace OpenRPA
         public bool disable_instance_store { get { return GetProperty(null, false); } set { SetProperty(null, value); } }
         public bool skip_online_state { get { return GetProperty(null, false); } set { SetProperty(null, value); } }
         public int thread_lock_timeout_seconds { get { return GetProperty(null, 10); } set { SetProperty(null, value); } }
+        public bool thread_exit_on_lock_timeout { get { return GetProperty(null, false); } set { SetProperty(null, value); } }
         public bool skip_child_session_check { get { return GetProperty(null, false); } set { SetProperty(null, value); } }
         private void loadEntropy()
         {
@@ -212,6 +214,7 @@ namespace OpenRPA
                 _ = isagent;
                 _ = culture;
                 _ = ocrlanguage;
+                _ = restore_dependencies_on_startup;
                 //_ = openworkflows;
                 _ = mainwindow_position;
                 _ = designerlayout;
@@ -256,6 +259,7 @@ namespace OpenRPA
                 _ = skip_online_state;
                 _ = thread_lock_timeout_seconds;
                 _ = skip_child_session_check;
+                _ = thread_exit_on_lock_timeout;
 
                 _ = max_trace_lines;
                 _ = max_output_lines;

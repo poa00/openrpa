@@ -113,6 +113,7 @@ namespace OpenRPA
         }
         public string robotqueue = "";
         private bool first_connect = true;
+        private bool first_serverDataLoad = true;
         private int connect_attempts = 0;
         private bool? _isRunningInChildSession = null;
         public bool isRunningInChildSession
@@ -142,7 +143,6 @@ namespace OpenRPA
                 }
             }
         }
-        private static readonly object statelock = new object();
         public IMainWindow Window { get; set; }
         public List<IWorkflowInstance> WorkflowInstances
         {
@@ -160,7 +160,14 @@ namespace OpenRPA
                         System.Threading.Monitor.Exit(WorkflowInstance.Instances);
                     }
                 }
-                else { throw new LockNotReceivedException("Failed returning list of workflow instances"); }
+                else {
+                    if (Config.local.thread_exit_on_lock_timeout)
+                    {
+                        Log.Error("Locally Cached savelock");
+                        System.Environment.Exit(1);
+                    }
+                    throw new LockNotReceivedException("Failed returning list of workflow instances"); 
+                }
                 return result;
             }
         }
@@ -765,16 +772,48 @@ namespace OpenRPA
                         }
                     });
                 }
-                foreach (var _id in updatePackages)
+                if (first_serverDataLoad)
                 {
-                    try
+                    // just started a new instance, load all project dependencies
+                    first_serverDataLoad = false;
+                    if (Config.local.restore_dependencies_on_startup)
                     {
-                        var p = Projects.FindById(_id);
-                        await p.InstallDependencies(true);
+                        try
+                        {
+                            await NuGetPackageManager.Instance.ResolveProjectDependencies(installAll: true);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex.ToString());
+                        }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        Log.Error(ex.ToString());
+                        // just run the check
+                        try
+                        {
+                            await NuGetPackageManager.Instance.ResolveProjectDependencies(installAll: false);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex.ToString());
+                        }
+                    }
+                }
+                else
+                {
+                    // project live-updated, install normally
+                    foreach (var _id in updatePackages)
+                    {
+                        try
+                        {
+                            var p = Projects.FindById(_id);
+                            await p.InstallDependencies(true);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex.ToString());
+                        }
                     }
                 }
                 Log.Debug("LoadServerData::query pending workflow instances");
